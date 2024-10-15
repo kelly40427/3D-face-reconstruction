@@ -4,60 +4,7 @@ import os
 import glob
 
 class background:
-    def get_coordinates(self, image):
-        global rect, leftButtonDown, leftButtonUp
-
-        rect = [0, 0, 0, 0]
-        leftButtonDown = False
-        leftButtonUp = True
-
-        # Mouse event callback function
-        def on_mouse(event, x, y, flags, param):
-            global rect, leftButtonDown, leftButtonUp
-            if event == cv2.EVENT_LBUTTONDOWN:
-                rect[0] = x
-                rect[1] = y
-                rect[2] = x
-                rect[3] = y
-                leftButtonDown = True
-                leftButtonUp = False
-
-            if event == cv2.EVENT_MOUSEMOVE:
-                if leftButtonDown and not leftButtonUp:
-                    rect[2] = x
-                    rect[3] = y
-
-            if event == cv2.EVENT_LBUTTONUP:
-                if leftButtonDown and not leftButtonUp:
-                    rect[0], rect[2] = min(rect[0], rect[2]), max(rect[0], rect[2])
-                    rect[1], rect[3] = min(rect[1], rect[3]), max(rect[1], rect[3])
-                    leftButtonDown = False
-                    leftButtonUp = True
-                    cv2.destroyWindow('Select ROI')
-
-        # Create a window and set mouse callback
-        cv2.namedWindow('Select ROI', cv2.WINDOW_NORMAL)
-        cv2.setMouseCallback('Select ROI', on_mouse)
-
-        while True:
-            img_copy = image.copy()
-            if leftButtonDown and not leftButtonUp:
-                cv2.rectangle(img_copy, (rect[0], rect[1]), (rect[2], rect[3]), (0, 255, 0), 2)
-            cv2.imshow('Select ROI', img_copy)
-
-            # Exit when left button is released
-            if leftButtonUp and not leftButtonDown and (rect[2] - rect[0] > 0 and rect[3] - rect[1] > 0):
-                break
-
-            if cv2.waitKey(1) & 0xFF == 27:  # Exit on 'ESC' key press
-                rect = [0, 0, 0, 0]  # Reset rect if the user cancels
-                break
-
-        cv2.destroyWindow('Select ROI')
-
-        return (rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1])  # Returns (x, y, width, height)
-
-    def batch_remove_background(self, subject_path, rect, output_folder):
+    def batch_remove_background(self, subject_path, output_folder):
         # Ensure the output folder exists
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
@@ -75,13 +22,9 @@ class background:
 
             filename = os.path.basename(file_path_in)  # Extract the filename
 
-            # Apply GrabCut background removal using the provided rect
+            # Apply background removal
             try:
-                if rect[2] > 0 and rect[3] > 0:  # Ensure valid rect dimensions
-                    result_image = self.remove_background(img_rb, rect)
-                else:
-                    print(f"Skipping {filename} due to invalid ROI selection.")
-                    continue
+                result_image = self.remove_background(img_rb)
             except cv2.error as e:
                 print(f"Error processing {filename}: {e}")
                 continue
@@ -92,21 +35,41 @@ class background:
 
             print(f"Processed {filename} and saved to {file_path_out}")
 
-    def remove_background(self, image, rect):
-        if rect[2] <= 0 or rect[3] <= 0:
-            raise ValueError("Invalid rectangle dimensions for GrabCut.")
+    def remove_background(self, image, min_contour_area=5000):
+        # Step 1: Convert the image to grayscale
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        mask = np.zeros(image.shape[:2], np.uint8)
-        bgdModel = np.zeros((1, 65), np.float64)
-        fgdModel = np.zeros((1, 65), np.float64)
+        # Step 2: Use a combination of Canny edge detection and thresholding to better isolate the subject
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        
+        # Apply Canny edge detection to detect edges
+        edges = cv2.Canny(blurred, 400, 700)
 
-        # Apply GrabCut algorithm
-        cv2.grabCut(image, mask, rect, bgdModel, fgdModel, 5, cv2.GC_INIT_WITH_RECT)
+        # Apply thresholding to further separate foreground and background
+        _, thresh = cv2.threshold(blurred, 110, 255, cv2.THRESH_BINARY)
 
-        # Create mask where the background is set to 0, and the foreground to 1
-        mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
+        # Combine edges and threshold to create a mask
+        combined_mask = cv2.bitwise_or(edges, thresh)
 
-        # Apply mask to the image
-        result_image = image * mask2[:, :, np.newaxis]
+        # Step 3: Clean up the mask using morphological operations
+        kernel = np.ones((5, 5), np.uint8)
+        mask_cleaned = cv2.morphologyEx(combined_mask, cv2.MORPH_CLOSE, kernel, iterations=2)
+
+        # Step 4: Invert the mask (foreground becomes white, background becomes black)
+        mask_inv = cv2.bitwise_not(mask_cleaned)
+
+        # Step 5: Contour detection to find objects in the mask
+        contours, _ = cv2.findContours(mask_inv, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Step 6: Filter out small objects by contour area
+        filtered_mask = np.zeros_like(mask_inv)  # Empty mask to store the filtered objects
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if area > min_contour_area:  # Only keep contours larger than the min_contour_area
+                cv2.drawContours(filtered_mask, [contour], -1, (255), thickness=cv2.FILLED)
+
+        # Step 7: Use the filtered mask to isolate the foreground
+        mask_inv_3ch = cv2.merge([filtered_mask, filtered_mask, filtered_mask])
+        result_image = cv2.bitwise_and(image, mask_inv_3ch)
 
         return result_image
