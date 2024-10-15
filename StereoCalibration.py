@@ -49,11 +49,12 @@ class StereoCal:
 
             if ret1 == True and ret2 == True:
                 objpoints.append(objp)
-                imgpoints_calib1.append(corners1)
-                imgpoints_calib2.append(corners2)
 
                 corners1 = cv.cornerSubPix(gray1, corners1,(11,11), (-1,-1), criteria)
                 corners2 = cv.cornerSubPix(gray2, corners2,(11,11), (-1,-1), criteria)
+                
+                imgpoints_calib1.append(corners1)
+                imgpoints_calib2.append(corners2)
 
                 img_shape = gray1.shape[::-1]
             else:
@@ -75,33 +76,23 @@ class StereoCal:
         img_1 = cv.imread(images_calib1)
         img_2 = cv.imread(images_calib2)
         h, w = img_1.shape[:2]
-        
+        img_shape = img_1.shape[:2][::-1]
         # check if read the image successfully
         if img_1 is None or img_2 is None:
             print(f"Error: Failed to load images: {images_calib1}, {images_calib2}")
             return None, None, None
 
         #Undistortion
-        newcameramtx1, roi1 = cv.getOptimalNewCameraMatrix(CM1, dist1, (w, h), 1, (w, h))
-        newcameramtx2, roi2 = cv.getOptimalNewCameraMatrix(CM2, dist2, (w, h), 1, (w, h))
-        undistort1 = cv.undistort(img_1, CM1, dist1, None, newcameramtx1)
-        undistort2 = cv.undistort(img_2, CM2, dist2, None, newcameramtx2)
-        x1, y1, w1, h1 = roi1
-        undistort1 = undistort1[y1:y1+h1, x1:x1+w1]
-
-        x2, y2, w2, h2 = roi2
-        undistort2 = undistort2[y2:y2+h2, x2:x2+w2]
 
         # stereo rectification
-        img_shape = undistort1.shape[:2]
         R1, R2, P1, P2, Q, _, _ = cv.stereoRectify(CM1, dist1, CM2, dist2, img_shape, R, T)
 
-        # prepare to remap
+        # prepare to remap (undistortion)
         maps1 = cv.initUndistortRectifyMap(CM1, dist1, R1, P1, img_shape, cv.CV_16SC2)
         maps2 = cv.initUndistortRectifyMap(CM2, dist2, R2, P2, img_shape, cv.CV_16SC2)
 
-        rectified_1 = cv.remap(undistort1, maps1[0], maps1[1], cv.INTER_LINEAR)
-        rectified_2 = cv.remap(undistort2, maps2[0], maps2[1], cv.INTER_LINEAR)
+        rectified_1 = cv.remap(img_1, maps1[0], maps1[1], cv.INTER_LINEAR)
+        rectified_2 = cv.remap(img_2, maps2[0], maps2[1], cv.INTER_LINEAR)
 
         return rectified_1, rectified_2, Q
 
