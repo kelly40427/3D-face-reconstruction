@@ -78,6 +78,7 @@ for subject_path in subject_paths:
         disparity_map_clipped = np.clip(disparity_map, 0, 255)
         plt.imshow(disparity_map_clipped, cmap='viridis')
         plt.colorbar()
+        plt.title('Disparity Map')
         plt.show()
 
         # Depth map creation
