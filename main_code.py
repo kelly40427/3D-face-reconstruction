@@ -74,9 +74,11 @@ for subject_path in subject_paths:
 
         # Stereo matching
         disparity_map = stereo_matching.stereoMatchingBM(rectified_left, rectified_middle)
+        unreliable_disparity_map = stereo_matching.unreliable_disparity_mask(disparity_map)
+        filtered_disparity_map = stereo_matching.filter_disparity(disparity_map,unreliable_disparity_map)
 
-        disparity_map_clipped = np.clip(disparity_map, 0, 255)
-        plt.imshow(disparity_map, cmap='viridis')
+        disparity_map_clipped = np.clip(filtered_disparity_map, 0, 255)
+        plt.imshow(filtered_disparity_map, cmap='viridis')
         plt.colorbar()
         plt.title('Disparity Map')
         plt.show()
@@ -129,6 +131,8 @@ for subject_path in subject_paths:
 
         # Stereo matching
         disparity_map = stereo_matching.stereoMatchingBM(rectified_right, rectified_middle)
+        unreliable_disparity_map = stereo_matching.unreliable_disparity_mask(disparity_map)
+        filtered_disparity_map = stereo_matching.filter_disparity(disparity_map,unreliable_disparity_map)
 
         disparity_map_clipped = np.clip(disparity_map, 0, 255)
         plt.imshow(disparity_map_clipped, cmap='viridis')
