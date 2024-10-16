@@ -2,6 +2,10 @@ import cv2
 import numpy as np
 
 class stereoMatching:
+
+    def __init__(self, disparity_threshold=1.0):
+        self.disparity_threshold = disparity_threshold
+
     def stereoMatching(self, img1, img2, h, w):
         DMap = np.zeros(img1.shape[:2])
         imgH, imgW = img1.shape[:2]
@@ -60,5 +64,21 @@ class stereoMatching:
         # disparity = np.uint8(disparity)
         
         return disparity
+    
+    def unreliable_disparity_mask(self, disparity_map):
+
+        unreliable_mask = np.zeros_like(disparity_map, dtype=np.uint8)
+        unreliable_mask[disparity_map < self.disparity_threshold] = 255  
+
+
+        return unreliable_mask
+
+
+    def filter_disparity(self, disparity_map, unreliable_mask):
+
+        filtered_disparity = np.copy(disparity_map)
+        filtered_disparity[unreliable_mask == 255] = 0  
+
+        return filtered_disparity
 
     
