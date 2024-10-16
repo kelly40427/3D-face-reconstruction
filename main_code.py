@@ -23,18 +23,18 @@ depth_map_creator = DepthMapCreator()
 mesh_generator = MeshGenerator()  
 
 # Paths to calibration images
-calib_left = 'D:/MyCode/Image Processing/project/ipcv_project3/Calibratie 1/calibrationLeft'
-calib_middle = 'D:/MyCode/Image Processing/project/ipcv_project3/Calibratie 1/calibrationMiddle'
-calib_right = 'D:/MyCode/Image Processing/project/ipcv_project3/Calibratie 1/calibrationRight'
+calib_left = 'ipcv_project3/Calibratie 1/calibrationLeft'
+calib_middle = 'ipcv_project3/Calibratie 1/calibrationMiddle'
+calib_right = 'ipcv_project3/Calibratie 1/calibrationRight'
 
 CM1, dist1, CM2, dist2, R_left_middle, T_left_middle = stereocal.stereo_calibration(calib_left, calib_middle)
 CM_middle, dist_middle, CM_right, dist_right, R_middle_right, T_middle_right = stereocal.stereo_calibration(calib_middle, calib_right)
 
 # Paths to subjects
 subject_paths = [
-    'D:/MyCode/Image Processing/project/ipcv_project3/subject1',
-    'D:/MyCode/Image Processing/project/ipcv_project3/subject2',
-    'D:/MyCode/Image Processing/project/ipcv_project3/subject4'
+    'ipcv_project3/subject1',
+    'ipcv_project3/subject2',
+    'ipcv_project3/subject4'
 ]
 
 for subject_path in subject_paths:
@@ -76,7 +76,7 @@ for subject_path in subject_paths:
         disparity_map = stereo_matching.stereoMatchingBM(rectified_left, rectified_middle)
 
         disparity_map_clipped = np.clip(disparity_map, 0, 255)
-        plt.imshow(disparity_map_clipped, cmap='viridis')
+        plt.imshow(disparity_map, cmap='viridis')
         plt.colorbar()
         plt.title('Disparity Map')
         plt.show()

@@ -19,10 +19,10 @@ class DepthMapCreator:
         depth_map[depth_map > 10000] = 10000  # Set a reasonable threshold for large depth values
         
         # Normalize depth map for better visualization
-        depth_map_normalized = cv2.normalize(depth_map, None, 0, 255, norm_type=cv2.NORM_MINMAX)
-        depth_map_normalized = np.uint8(depth_map_normalized)
+        # depth_map_normalized = cv2.normalize(depth_map, None, 0, 255, norm_type=cv2.NORM_MINMAX)
+        # depth_map_normalized = np.uint8(depth_map_normalized)
         
-        return depth_map_normalized
+        return depth_map
 
 
     def plot_depth_map(self, depth_map, output_path):
