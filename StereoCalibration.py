@@ -66,7 +66,7 @@ class StereoCal:
 
         ret, CM1, dist1, CM2, dist2, R, T, E, F = cv.stereoCalibrate(objpoints, imgpoints_calib1, imgpoints_calib2,
                                                                             None, None, None, None, img_shape, 
-                                                                            criteria = criteria, flags=cv.CALIB_FIX_INTRINSIC )
+                                                                            criteria = criteria, flags=cv.CALIB_FIX_PRINCIPAL_POINT )
             
         return CM1, dist1, CM2, dist2, R, T
 
