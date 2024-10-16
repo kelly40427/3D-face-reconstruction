@@ -102,7 +102,7 @@ for subject_path in subject_paths:
     right_img_bg_removed = background_removal.remove_background(right_img)
     middle_img_bg_removed = background_removal.remove_background(middle_img)
 
-    bg_removed_folder = os.path.join(subject_path, 'bg_removed2')
+    bg_removed_folder = os.path.join(subject_path, 'bg_removed')
     if not os.path.exists(bg_removed_folder):
         os.makedirs(bg_removed_folder)
 
