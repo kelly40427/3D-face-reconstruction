@@ -1,75 +1,149 @@
-import cv2
+import cv2 as cv
 import numpy as np
-import os
 import glob
+import os
+import matplotlib.pyplot as plt
+from PIL import Image
+import os
 
-class background:
-    def batch_remove_background(self, subject_path, output_folder):
-        # Ensure the output folder exists
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
+# Import the classes
+from colour_normalisation import ColourNorm
+from StereoCalibration import StereoCal
+from backgroundRemoval import background
+from stereoMatching import stereoMatching
+from DepthMapCreator import DepthMapCreator
+from MeshGenerator import MeshGenerator  
 
-        # Get all image files from 'Left', 'Middle', and 'Right' folders
-        file_list = []
-        for sub_folder in ['subject*Left', 'subject*Middle', 'subject*Right']:
-            file_list.extend(glob.glob(os.path.join(subject_path, sub_folder, '*.jpg')))
+# Define the classes
+colournorm = ColourNorm()
+stereocal = StereoCal()
+background_removal = background()
+stereo_matching = stereoMatching()
+depth_map_creator = DepthMapCreator()
+mesh_generator = MeshGenerator()  
 
-        # Loop through all images in the folder
-        for file_path_in in file_list:
-            img_rb = cv2.imread(file_path_in)  # Read the image
-            if img_rb is None:
-                continue  # Skip files that can't be read as images
+# Paths to calibration images
+calib_left = r"C:\Users\lobke\OneDrive - University of Twente\Documents\BME5\image processing and computer vision\project\ipcv_project3\Calibratie 1\calibrationLeft"
+calib_middle = r"C:\Users\lobke\OneDrive - University of Twente\Documents\BME5\image processing and computer vision\project\ipcv_project3\Calibratie 1\calibrationMiddle"
+calib_right = r"C:\Users\lobke\OneDrive - University of Twente\Documents\BME5\image processing and computer vision\project\ipcv_project3\Calibratie 1\calibrationRight"
 
-            filename = os.path.basename(file_path_in)  # Extract the filename
+CM1, dist1, CM2, dist2, R_left_middle, T_left_middle = stereocal.stereo_calibration(calib_left, calib_middle)
+CM_middle, dist_middle, CM_right, dist_right, R_middle_right, T_middle_right = stereocal.stereo_calibration(calib_middle, calib_right)
 
-            # Apply background removal
-            try:
-                result_image = self.remove_background(img_rb)
-            except cv2.error as e:
-                print(f"Error processing {filename}: {e}")
-                continue
+# Paths to subjects
+subject_paths = [
+    r'C:\Users\lobke\OneDrive - University of Twente\Documents\BME5\image processing and computer vision\project\ipcv_project3\subject1',
+    r'C:\Users\lobke\OneDrive - University of Twente\Documents\BME5\image processing and computer vision\project\ipcv_project3\subject2',
+    r'C:\Users\lobke\OneDrive - University of Twente\Documents\BME5\image processing and computer vision\project\ipcv_project3\subject4'
+]
 
-            # Save the resulting image to the output folder
-            file_path_out = os.path.join(output_folder, filename)
-            cv2.imwrite(file_path_out, result_image)
+for subject_path in subject_paths:
+    left_img_path = glob.glob(os.path.join(subject_path, 'subject*Left', '*.jpg'))[0]
+    middle_img_path = glob.glob(os.path.join(subject_path, 'subject*Middle', '*.jpg'))[0]
 
-            print(f"Processed {filename} and saved to {file_path_out}")
+    left_img = cv.imread(left_img_path)
+    middle_img = cv.imread(middle_img_path)
 
-    def remove_background(self, image, min_contour_area=5000):
-        # Step 1: Convert the image to grayscale
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    left_img_bg_removed = background_removal.remove_background(left_img)
+    middle_img_bg_removed = background_removal.remove_background(middle_img)
 
-        # Step 2: Use a combination of Canny edge detection and thresholding to better isolate the subject
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        
-        # Apply Canny edge detection to detect edges
-        edges = cv2.Canny(blurred, 400, 700)
+    bg_removed_folder = os.path.join(subject_path, 'bg_removed')
+    if not os.path.exists(bg_removed_folder):
+        os.makedirs(bg_removed_folder)
 
-        # Apply thresholding to further separate foreground and background
-        _, thresh = cv2.threshold(blurred, 110, 255, cv2.THRESH_BINARY)
+    left_img_bg_removed_path = os.path.join(bg_removed_folder, 'left_bg_removed.jpg')
+    middle_img_bg_removed_path = os.path.join(bg_removed_folder, 'middle_bg_removed.jpg')
 
-        # Combine edges and threshold to create a mask
-        combined_mask = cv2.bitwise_or(edges, thresh)
+    cv.imwrite(left_img_bg_removed_path, left_img_bg_removed)
+    cv.imwrite(middle_img_bg_removed_path, middle_img_bg_removed)
 
-        # Step 3: Clean up the mask using morphological operations
-        kernel = np.ones((5, 5), np.uint8)
-        mask_cleaned = cv2.morphologyEx(combined_mask, cv2.MORPH_CLOSE, kernel, iterations=2)
+    # rectified_left, rectified_middle, Q_left_middle = stereocal.stereo_rectification(
+    #     CM1, dist1, CM2, dist2, R_left_middle, T_left_middle, left_img_bg_removed_path, middle_img_bg_removed_path
+    # )
 
-        # Step 4: Invert the mask (foreground becomes white, background becomes black)
-        mask_inv = cv2.bitwise_not(mask_cleaned)
+    # if rectified_left is not None and rectified_middle is not None:
+    #     rectified_folder = os.path.join(subject_path, 'rectified')
+    #     if not os.path.exists(rectified_folder):
+    #         os.makedirs(rectified_folder)
 
-        # Step 5: Contour detection to find objects in the mask
-        contours, _ = cv2.findContours(mask_inv, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    #     rectified_left_path = os.path.join(rectified_folder, 'rectified_left.jpg')
+    #     rectified_middle_path = os.path.join(rectified_folder, 'rectified_middle.jpg')
 
-        # Step 6: Filter out small objects by contour area
-        filtered_mask = np.zeros_like(mask_inv)  # Empty mask to store the filtered objects
-        for contour in contours:
-            area = cv2.contourArea(contour)
-            if area > min_contour_area:  # Only keep contours larger than the min_contour_area
-                cv2.drawContours(filtered_mask, [contour], -1, (255), thickness=cv2.FILLED)
+    #     cv.imwrite(rectified_left_path, rectified_left)
+    #     cv.imwrite(rectified_middle_path, rectified_middle)
 
-        # Step 7: Use the filtered mask to isolate the foreground
-        mask_inv_3ch = cv2.merge([filtered_mask, filtered_mask, filtered_mask])
-        result_image = cv2.bitwise_and(image, mask_inv_3ch)
+    #     # Stereo matching
+    #     disparity_map = stereo_matching.stereoMatchingBM(rectified_left, rectified_middle)
 
-        return result_image
+    #     disparity_map_clipped = np.clip(disparity_map, 0, 255)
+    #     plt.imshow(disparity_map_clipped, cmap='viridis')
+    #     plt.title('Disparity Map')
+    #     plt.colorbar()
+    #     plt.show()
+
+    #     # Depth map creation
+    #     depth_map = depth_map_creator.create_depth_map(disparity_map, Q_left_middle)
+    #     depth_map_output_path = os.path.join(rectified_folder, 'depth_map_left_middle.png')
+    #     depth_map_creator.plot_depth_map(depth_map, depth_map_output_path)
+
+    #     # 3D Mesh generation
+    #     mesh_output_path = os.path.join(rectified_folder, '3d_mesh.png')
+    #     mesh_generator.generate_mesh(depth_map, mesh_output_path)
+    # else:
+    #     print(f"Rectification failed for images: {left_img_path}, {middle_img_path}")
+
+
+for subject_path in subject_paths:
+    right_img_path = glob.glob(os.path.join(subject_path, 'subject*Right', '*.jpg'))[0]
+    middle_img_path = glob.glob(os.path.join(subject_path, 'subject*Middle', '*.jpg'))[0]
+
+    right_img = cv.imread(right_img_path)
+    middle_img = cv.imread(middle_img_path)
+
+    right_img_bg_removed = background_removal.remove_background(right_img)
+    middle_img_bg_removed = background_removal.remove_background(middle_img)
+
+    bg_removed_folder = os.path.join(subject_path, 'bg_removed')
+    if not os.path.exists(bg_removed_folder):
+        os.makedirs(bg_removed_folder)
+
+    right_img_bg_removed_path = os.path.join(bg_removed_folder, 'right_bg_removed.jpg')
+    middle_img_bg_removed_path = os.path.join(bg_removed_folder, 'middle_bg_removed.jpg')
+
+    cv.imwrite(right_img_bg_removed_path, right_img_bg_removed)
+    cv.imwrite(middle_img_bg_removed_path, middle_img_bg_removed)
+
+    # rectified_right, rectified_middle, Q_right_middle = stereocal.stereo_rectification(
+    #     CM1, dist1, CM2, dist2, R_middle_right, T_middle_right, right_img_bg_removed_path, middle_img_bg_removed_path
+    # )
+
+    # if rectified_right is not None and rectified_middle is not None:
+    #     rectified_folder = os.path.join(subject_path, 'rectified')
+    #     if not os.path.exists(rectified_folder):
+    #         os.makedirs(rectified_folder)
+
+    #     rectified_right_path = os.path.join(rectified_folder, 'rectified_right.jpg')
+    #     rectified_middle_path = os.path.join(rectified_folder, 'rectified_middle.jpg')
+
+    #     cv.imwrite(rectified_right_path, rectified_right)
+    #     cv.imwrite(rectified_middle_path, rectified_middle)
+
+    #     # Stereo matching
+    #     disparity_map = stereo_matching.stereoMatchingBM(rectified_right, rectified_middle)
+
+    #     disparity_map_clipped = np.clip(disparity_map, 0, 255)
+    #     plt.imshow(disparity_map_clipped, cmap='viridis')
+    #     plt.title('Disparity Map')
+    #     plt.colorbar()
+    #     plt.show()
+
+    #     # Depth map creation
+    #     depth_map = depth_map_creator.create_depth_map(disparity_map, Q_right_middle)
+    #     depth_map_output_path = os.path.join(rectified_folder, 'depth_map_right_middle.png')
+    #     depth_map_creator.plot_depth_map(depth_map, depth_map_output_path)
+
+    #     # 3D Mesh generation
+    #     mesh_output_path = os.path.join(rectified_folder, '3d_mesh.png')
+    #     mesh_generator.generate_mesh(depth_map, mesh_output_path)
+    # else:
+    #     print(f"Rectification failed for images: {left_img_path}, {middle_img_path}")
