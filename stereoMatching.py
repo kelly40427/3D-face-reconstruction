@@ -36,7 +36,7 @@ class stereoMatching:
 
         # Parameters for StereoSGBM
         numDisparities = 16*3  # Must be a multiple of 16
-        blockSize = 15  # Block size for matching
+        blockSize = 17  # Block size for matching
 
         # Initialize StereoSGBM object with corrected P1 and P2
         stereo = cv2.StereoSGBM_create(
