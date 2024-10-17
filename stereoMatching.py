@@ -35,20 +35,20 @@ class stereoMatching:
         img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
         # Parameters for StereoSGBM
-        numDisparities = 16*3  # Must be a multiple of 16
-        blockSize = 15  # Block size for matching
+        numDisparities = 16*4  # Must be a multiple of 16
+        blockSize = 5  # Block size for matching
 
         # Initialize StereoSGBM object with corrected P1 and P2
         stereo = cv2.StereoSGBM_create(
-            minDisparity=0,
+            minDisparity=60,
             numDisparities=numDisparities,
             blockSize=blockSize,
-            P1=8 * 3 * 9 ** 2,  # Smaller penalty on disparity changes
-            P2=32 * 3 * 9 ** 2,  # Larger penalty on disparity changes
+            P1=8 * 3 * 5 ** 2,  # Smaller penalty on disparity changes
+            P2=32 * 3 * 5 ** 2,  # Larger penalty on disparity changes
             disp12MaxDiff=1,
-            uniquenessRatio=1,
-            speckleWindowSize=50,
-            speckleRange=32,
+            uniquenessRatio=5,
+            speckleWindowSize=100,
+            speckleRange=15,
             preFilterCap=63,
             mode=cv2.STEREO_SGBM_MODE_SGBM_3WAY
         )
