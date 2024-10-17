@@ -153,7 +153,7 @@ for subject_path in subject_paths:
         cv.imwrite(rectified_middle_path, rectified_middle)
 
         # Stereo matching
-        disparity_map = stereo_matching.stereoMatchingBM(rectified_middle, rectified_right)
+        disparity_map = stereo_matching.stereoMatchingBM(rectified_right,rectified_middle)
         unreliable_disparity_map = stereo_matching.unreliable_disparity_mask(disparity_map)
         filtered_disparity_map = stereo_matching.filter_disparity(disparity_map,unreliable_disparity_map)
 
