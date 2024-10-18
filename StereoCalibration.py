@@ -95,12 +95,6 @@ class StereoCal:
         rectified_1 = cv.remap(img_1, maps1[0], maps1[1], cv.INTER_LINEAR)
         rectified_2 = cv.remap(img_2, maps2[0], maps2[1], cv.INTER_LINEAR)
 
-        # Show rectified images
-        cv.imshow('Rectified Image 1', rectified_1)
-        cv.imshow('Rectified Image 2', rectified_2)
-        cv.waitKey(0)
-        cv.destroyAllWindows()
-
         return rectified_1, rectified_2, Q
 
 
