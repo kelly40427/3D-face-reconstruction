@@ -43,8 +43,8 @@ class stereoMatching:
             minDisparity=60,
             numDisparities=numDisparities,
             blockSize=blockSize,
-            P1=8 * 3 * 5 ** 2,  # Smaller penalty on disparity changes
-            P2=32 * 3 * 5 ** 2,  # Larger penalty on disparity changes
+            P1=8 * 3 * blockSize ** 2,  # Smaller penalty on disparity changes
+            P2=32 * 3 * blockSize ** 2,  # Larger penalty on disparity changes
             disp12MaxDiff=1,
             uniquenessRatio=5,
             speckleWindowSize=100,
@@ -56,6 +56,12 @@ class stereoMatching:
         # Compute disparity
         disparity = stereo.compute(img1_gray, img2_gray).astype(np.float32) / 16.0
 
+        # Define a kernel for morphological operations
+        kernel = np.ones((5, 5), np.uint8)
+
+        # Apply morphological closing
+        disparity = cv2.morphologyEx(disparity, cv2.MORPH_CLOSE, kernel)
+        
         # Apply bilateral filter to smooth disparity map
         # disparity = cv2.bilateralFilter(disparity, 9, 75, 75)
         
