@@ -85,17 +85,21 @@ for subject_path in subject_paths:
 
         # Stereo matching
         disparity_map = stereo_matching.stereoMatchingBM(rectified_left, rectified_middle)
+        #disparity_map = stereo_matching.stereoMatching(rectified_left, rectified_middle,15,15)
         unreliable_disparity_map = stereo_matching.unreliable_disparity_mask(disparity_map)
         filtered_disparity_map = stereo_matching.filter_disparity(disparity_map,unreliable_disparity_map)
 
-        disparity_map_clipped = np.clip(filtered_disparity_map, 0, 255)
+        disparity_map_clipped = np.clip(disparity_map, 0, 255)
         plt.imshow(filtered_disparity_map, cmap='viridis')
         plt.colorbar()
         plt.title('Disparity Map')
         plt.show()
 
         # Depth map creation
-        depth_map = depth_map_creator.create_depth_map(disparity_map, Q_left_middle)
+        focal_length_middle = (CM2[0,0] + CM2[1,1]) / 2
+        baseline_left_middle = np.linalg.norm(T_left_middle)
+
+        depth_map = depth_map_creator.create_depth_map(disparity_map, Q_left_middle, focal_length_middle, baseline_left_middle)
         depth_map_output_path = os.path.join(rectified_folder, 'depth_map_left_middle.png')
         depth_map_creator.plot_depth_map(depth_map, depth_map_output_path)
 
@@ -104,9 +108,10 @@ for subject_path in subject_paths:
         mesh_generator.generate_mesh(depth_map, mesh_output_path)
 
         # pcd creation
-        points_3d, valid_mask = depth_map_creator.create_3d_points(filtered_disparity_map, Q_left_middle)
-        colors = rectified_left[valid_mask].reshape(-1, 3) 
-        pcd_left_middle = depth_map_creator.create_3dpoint_cloud(points_3d, colors)
+        #points_3d, valid_mask = depth_map_creator.create_3d_points(filtered_disparity_map, Q_left_middle)
+        #colors = rectified_middle[valid_mask].reshape(-1, 3) 
+        #pcd_left_middle = depth_map_creator.create_3dpoint_cloud(points_3d, colors)
+        pcd_left_middle = depth_map_creator.create_3dpoint_cloud2(depth_map, rectified_middle, CM2)
         o3d.visualization.draw_geometries([pcd_left_middle], window_name="Colored Point Cloud with Normals")
         pcd_left_middle_list.append(pcd_left_middle)
 
@@ -164,7 +169,10 @@ for subject_path in subject_paths:
         plt.show()
 
         # Depth map creation
-        depth_map = depth_map_creator.create_depth_map(disparity_map, Q_right_middle)
+        focal_length_middle2 = (CM_middle[0,0] + CM_middle[1,1]) / 2
+        baseline_right_middle = np.linalg.norm(T_middle_right)
+
+        depth_map = depth_map_creator.create_depth_map(disparity_map, Q_right_middle, focal_length_middle2, baseline_right_middle)
         depth_map_output_path = os.path.join(rectified_folder, 'depth_map_right_middle.png')
         depth_map_creator.plot_depth_map(depth_map, depth_map_output_path)
 
@@ -173,9 +181,10 @@ for subject_path in subject_paths:
         mesh_generator.generate_mesh(depth_map, mesh_output_path)
 
         # pcd creation
-        points_3d, valid_mask = depth_map_creator.create_3d_points(filtered_disparity_map, Q_left_middle)
-        colors = rectified_middle[valid_mask].reshape(-1, 3) 
-        pcd_middle_right = depth_map_creator.create_3dpoint_cloud(points_3d, colors)
+        #points_3d, valid_mask = depth_map_creator.create_3d_points(filtered_disparity_map, Q_left_middle)
+        #colors = rectified_middle[valid_mask].reshape(-1, 3) 
+        #pcd_middle_right = depth_map_creator.create_3dpoint_cloud(points_3d, colors)
+        pcd_middle_right = depth_map_creator.create_3dpoint_cloud2(depth_map, rectified_middle, CM_middle)
         o3d.visualization.draw_geometries([pcd_middle_right], window_name="Colored Point Cloud with Normals")
         pcd_middle_right_list.append(pcd_middle_right)
 

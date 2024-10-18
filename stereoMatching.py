@@ -14,8 +14,8 @@ class stereoMatching:
         
         for scanH in range(0, imgH, h):
             for scanW in range(0, imgW, w):
-                template = img1[scanH:scanH+h, scanW:scanW+w]
-                croppedImg2 = img2[scanH:scanH+h, 0:imgW]
+                template = img2[scanH:scanH+h, scanW:scanW+w]
+                croppedImg2 = img1[scanH:scanH+h, 0:imgW]
 
                 # match
                 result = cv2.matchTemplate(croppedImg2, template, cv2.TM_CCOEFF_NORMED)
@@ -26,6 +26,14 @@ class stereoMatching:
                 for i in range(scanH, min(scanH+h, imgH)):
                     for j in range(scanW, min(scanW+w, imgW)):
                         DMap[i, j] = max_loc[0] - scanW
+
+        # Define a kernel for morphological operations
+        kernel = np.ones((20, 20), np.uint8)
+
+        # Apply morphological closing
+        DMap = cv2.morphologyEx(DMap, cv2.MORPH_CLOSE, kernel)
+
+        DMap[DMap>200] = 200
         return DMap
     
     
@@ -36,11 +44,11 @@ class stereoMatching:
 
         # Parameters for StereoSGBM
         numDisparities = 16*3  # Must be a multiple of 16
-        blockSize = 15  # Block size for matching
+        blockSize = 7  # Block size for matching
 
         # Initialize StereoSGBM object with corrected P1 and P2
         stereo = cv2.StereoSGBM_create(
-            minDisparity=60,
+            minDisparity=10,
             numDisparities=numDisparities,
             blockSize=blockSize,
             P1=8 * 3 * blockSize ** 2,  # Smaller penalty on disparity changes
@@ -57,7 +65,7 @@ class stereoMatching:
         disparity = stereo.compute(img1_gray, img2_gray).astype(np.float32) / 16.0
 
         # Define a kernel for morphological operations
-        kernel = np.ones((5, 5), np.uint8)
+        kernel = np.ones((20, 20), np.uint8)
 
         # Apply morphological closing
         disparity = cv2.morphologyEx(disparity, cv2.MORPH_CLOSE, kernel)
