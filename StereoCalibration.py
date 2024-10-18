@@ -86,11 +86,11 @@ class StereoCal:
         #Undistortion
 
         # stereo rectification
-        R1, R2, P1, P2, Q, _, _ = cv.stereoRectify(CM1, dist1, CM2, dist2, img_shape, R, T, flags=cv.CALIB_ZERO_TANGENT_DIST)
+        R1, R2, P1, P2, Q, _, _ = cv.stereoRectify(CM1, dist1, CM2, dist2, img_shape, R, T, flags=cv.CALIB_ZERO_DISPARITY, alpha= -1)
 
         # prepare to remap (undistortion)
-        maps1 = cv.initUndistortRectifyMap(CM1, dist1, R1, P1, img_shape, cv.CV_32FC1)
-        maps2 = cv.initUndistortRectifyMap(CM2, dist2, R2, P2, img_shape, cv.CV_32FC1)
+        maps1 = cv.initUndistortRectifyMap(CM1, dist1, R1, P1, img_shape, cv.CV_16SC2)
+        maps2 = cv.initUndistortRectifyMap(CM2, dist2, R2, P2, img_shape, cv.CV_16SC2)
 
         rectified_1 = cv.remap(img_1, maps1[0], maps1[1], cv.INTER_LINEAR)
         rectified_2 = cv.remap(img_2, maps2[0], maps2[1], cv.INTER_LINEAR)
