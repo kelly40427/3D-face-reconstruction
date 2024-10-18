@@ -63,10 +63,11 @@ class StereoCal:
         
         num_valid_images = len(objpoints)
         print(f"Number of valid image pairs found: {num_valid_images}")
+        stereocalib_criteria = (cv.TERM_CRITERIA_MAX_ITER + cv.TERM_CRITERIA_EPS, 100, 1e-5)
 
         ret, CM1, dist1, CM2, dist2, R, T, E, F = cv.stereoCalibrate(objpoints, imgpoints_calib1, imgpoints_calib2,
                                                                             None, None, None, None, img_shape, 
-                                                                            criteria = criteria, flags=cv.CALIB_FIX_PRINCIPAL_POINT )
+                                                                            criteria = stereocalib_criteria, flags=cv.CALIB_FIX_PRINCIPAL_POINT )
             
         return CM1, dist1, CM2, dist2, R, T
 
@@ -85,11 +86,11 @@ class StereoCal:
         #Undistortion
 
         # stereo rectification
-        R1, R2, P1, P2, Q, _, _ = cv.stereoRectify(CM1, dist1, CM2, dist2, img_shape, R, T)
+        R1, R2, P1, P2, Q, _, _ = cv.stereoRectify(CM1, dist1, CM2, dist2, img_shape, R, T, flags=cv.CALIB_ZERO_TANGENT_DIST)
 
         # prepare to remap (undistortion)
-        maps1 = cv.initUndistortRectifyMap(CM1, dist1, R1, P1, img_shape, cv.CV_16SC2)
-        maps2 = cv.initUndistortRectifyMap(CM2, dist2, R2, P2, img_shape, cv.CV_16SC2)
+        maps1 = cv.initUndistortRectifyMap(CM1, dist1, R1, P1, img_shape, cv.CV_32FC1)
+        maps2 = cv.initUndistortRectifyMap(CM2, dist2, R2, P2, img_shape, cv.CV_32FC1)
 
         rectified_1 = cv.remap(img_1, maps1[0], maps1[1], cv.INTER_LINEAR)
         rectified_2 = cv.remap(img_2, maps2[0], maps2[1], cv.INTER_LINEAR)

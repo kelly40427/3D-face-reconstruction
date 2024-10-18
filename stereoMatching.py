@@ -35,8 +35,8 @@ class stereoMatching:
         img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
         # Parameters for StereoSGBM
-        numDisparities = 16*4  # Must be a multiple of 16
-        blockSize = 5  # Block size for matching
+        numDisparities = 16*3  # Must be a multiple of 16
+        blockSize = 15  # Block size for matching
 
         # Initialize StereoSGBM object with corrected P1 and P2
         stereo = cv2.StereoSGBM_create(
