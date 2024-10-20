@@ -131,13 +131,13 @@ for subject_path in subject_paths:
 
                 # Stereo matching
                 # diparity left-middle
-                disparity_map_left_middle = stereo_matching.stereoMatchingBM(rectified_left, rectified_middle)
+                total_disparity_left_middle, disparity_map_left_middle = stereo_matching.stereoMatchingBM(rectified_left, rectified_middle)
                 #disparity_map = stereo_matching.stereoMatching(rectified_left, rectified_middle,15,15)
                 unreliable_disparity_map_left_middle = stereo_matching.unreliable_disparity_mask(disparity_map_left_middle)
                 filtered_disparity_map_left_middle = stereo_matching.filter_disparity(disparity_map_left_middle,unreliable_disparity_map_left_middle)
                 
                 # disparity middle-right
-                disparity_map_middle_right = stereo_matching.stereoMatchingBM(rectified_middle_new, rectified_right)
+                total_disparity_middle_right, disparity_map_middle_right = stereo_matching.stereoMatchingBM(rectified_middle_new, rectified_right)
                 unreliable_disparity_map_middle_right = stereo_matching.unreliable_disparity_mask(disparity_map_middle_right)
                 filtered_disparity_map_middle_right = stereo_matching.filter_disparity(disparity_map_middle_right, unreliable_disparity_map_middle_right)
 
@@ -173,6 +173,28 @@ for subject_path in subject_paths:
                 depth_map_creator.plot_depth_map(depth_map_middle_right, depth_map_output_path)
 
 
+                # pcd creation
+                # pcd_left_middle
+                pcd_left_middle = depth_map_creator.create_3dpoint_cloud2(depth_map_left_middle, rectified_middle, camera_matrix_middle, total_disparity_left_middle)
+                o3d.visualization.draw_geometries([pcd_left_middle], window_name="Colored Point Cloud with Normals")
+                pcd_left_middle_list.append(pcd_left_middle)
+
+                # pcd_middle_right
+                pcd_middle_right = depth_map_creator.create_3dpoint_cloud2(depth_map_middle_right, rectified_right, camera_matrix_middle, total_disparity_middle_right)
+                o3d.visualization.draw_geometries([pcd_middle_right], window_name="Colored Point Cloud with Normals")
+                pcd_middle_right_list.append(pcd_middle_right)
+
+for pcd_left, pcd_right in zip(pcd_left_middle_list, pcd_middle_right_list):
+     threshold = 0.05
+     # trans_init = np.asarray([[0.862, 0.011, -0.507, 0.5],
+     #                     [-0.139, 0.967, -0.215, 0.7],
+     #                     [0.487, 0.255, 0.835, -1.4], [0.0, 0.0, 0.0, 1.0]])
+     trans_init = np.eye(4)
+     reg_p2p = icp_combine.point_to_point_icp(pcd_right, pcd_left, threshold, trans_init)
+     print("Transformation Matrix:")
+     print(reg_p2p)
+     # 視覺化結果
+     icp_combine.draw_registration_result(pcd_right, pcd_left, reg_p2p)
 
 
 

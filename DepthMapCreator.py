@@ -9,7 +9,7 @@ class DepthMapCreator:
         """
         Create a depth map by reprojecting the disparity map into 3D space using the Q matrix.
         """
-        min_disparity = 0
+        min_disparity = 10
         max_disparity = min_disparity+1024
         valid_mask = (disparity_map > min_disparity) & (disparity_map < max_disparity)
         # Reproject points to 3D space (Z axis corresponds to depth)
@@ -25,7 +25,7 @@ class DepthMapCreator:
         # Replace inf or very high values with a large, finite value
         depth_map[depth_map == np.inf] = 0
         depth_map[depth_map < 0 ] = 0
-        depth_map[depth_map > 1000] = 1000  # Set a reasonable threshold for large depth values
+        depth_map[depth_map > 10000] = 10000  # Set a reasonable threshold for large depth values
         
         # Normalize depth map for better visualization
         # depth_map_normalized = cv2.normalize(depth_map, None, 0, 255, norm_type=cv2.NORM_MINMAX)
@@ -74,7 +74,7 @@ class DepthMapCreator:
     
         return pcd
 
-    def create_3dpoint_cloud2(self, depth_map, image, K):
+    def create_3dpoint_cloud2(self, depth_map, image, K, total_disparity):
         """
         通过深度图和RGB图像生成带颜色的点云
         depth_map: 深度图 (H x W)
@@ -104,7 +104,11 @@ class DepthMapCreator:
                 Y = (v - cy) * Z / fy
                 
                 # 获取对应像素的颜色
-                color = image[v, u]
+                if u-total_disparity<0:
+                    ucolor = 0
+                else:
+                    ucolor = u-total_disparity
+                color = image[v, ucolor]
                 
                 # 将三维点和颜色组合起来
                 point_cloud.append([X, Y, Z, color[0], color[1], color[2]])

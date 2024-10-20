@@ -43,12 +43,13 @@ class stereoMatching:
         img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
         # Parameters for StereoSGBM
-        numDisparities = 16*6  # Must be a multiple of 16
+        minDisparity = 276
+        numDisparities = 16*4  # Must be a multiple of 16
         blockSize = 7  # Block size for matching
 
         # Initialize StereoSGBM object with corrected P1 and P2
         stereo = cv2.StereoSGBM_create(
-            minDisparity=0,
+            minDisparity=minDisparity,
             numDisparities=numDisparities,
             blockSize=blockSize,
             P1=8 * 3 * blockSize ** 2,  # Smaller penalty on disparity changes
@@ -72,14 +73,14 @@ class stereoMatching:
         disparity = cv2.morphologyEx(disparity, cv2.MORPH_CLOSE, kernel)
         
         # Apply bilateral filter to smooth disparity map
-        disparity = cv2.bilateralFilter(disparity, 9, 75, 75)
+        disparity = cv2.bilateralFilter(disparity, 9, 15, 15)
         
         # Normalize for better visualization
         # disparity = cv2.normalize(disparity, disparity, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
         # disparity = np.uint8(disparity)
         print(f"Disparity Map Min: {np.min(disparity)}, Max: {np.max(disparity)}")
         
-        return disparity
+        return minDisparity+numDisparities, disparity
     
     def unreliable_disparity_mask(self, disparity_map):
 
