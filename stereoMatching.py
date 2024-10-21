@@ -37,14 +37,14 @@ class stereoMatching:
         return DMap
     
     
-    def stereoMatchingBM(self, img1, img2):
+    def stereoMatchingBM(self, img1, img2, minDisparity, numDisparities, blockSize, uniquenessRatio):
         # Convert images to grayscale
         img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
         img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
         # Parameters for StereoSGBM
-        minDisparity = 276
-        numDisparities = 16*4  # Must be a multiple of 16
+        #minDisparity = 276
+        #numDisparities = 16*4  # Must be a multiple of 16
         blockSize = 5  # Block size for matching
 
         # Initialize StereoSGBM object with corrected P1 and P2
@@ -55,7 +55,7 @@ class stereoMatching:
             P1=8 * 3 * blockSize ** 2,  # Smaller penalty on disparity changes
             P2=32 * 3 * blockSize ** 2,  # Larger penalty on disparity changes
             disp12MaxDiff=1,
-            uniquenessRatio=5,
+            uniquenessRatio=uniquenessRatio,
             speckleWindowSize=50,
             speckleRange=32,
             preFilterCap=63,
