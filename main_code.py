@@ -141,17 +141,17 @@ for subject_path in subject_paths:
                 unreliable_disparity_map_middle_right = stereo_matching.unreliable_disparity_mask(disparity_map_middle_right)
                 filtered_disparity_map_middle_right = stereo_matching.filter_disparity(disparity_map_middle_right, unreliable_disparity_map_middle_right)
 
-                disparity_map_left_middle_clipped = np.clip(disparity_map_left_middle, 0, 255)
-                disparity_map_middle_right_clipped = np.clip(disparity_map_middle_right, 0, 255)
+                #disparity_map_left_middle_clipped = np.clip(disparity_map_left_middle, 0, 255)
+                #disparity_map_middle_right_clipped = np.clip(disparity_map_middle_right, 0, 255)
 
                 plt.figure(figsize=(12, 6))
                 plt.subplot(1, 2, 1)
-                plt.imshow(disparity_map_left_middle_clipped, cmap='viridis')
+                plt.imshow(disparity_map_left_middle, cmap='jet')
                 plt.colorbar()
                 plt.title('Disparity Map: Left-Middle')
 
                 plt.subplot(1, 2, 2)
-                plt.imshow(disparity_map_middle_right_clipped, cmap='viridis')
+                plt.imshow(disparity_map_middle_right, cmap='jet')
                 plt.colorbar()
                 plt.title('Disparity Map: Middle-Right')
 
