@@ -213,33 +213,29 @@ for subject_path in subject_paths:
                 o3d.visualization.draw_geometries([pcd_middle_right], window_name="Colored Point Cloud with Normals")
                 pcd_middle_right_list.append(pcd_middle_right)
 
-for pcd_left, pcd_right in zip(pcd_left_middle_list, pcd_middle_right_list):
-     threshold = 0.05
-     # trans_init = np.asarray([[0.862, 0.011, -0.507, 0.5],
-     #                     [-0.139, 0.967, -0.215, 0.7],
-     #                     [0.487, 0.255, 0.835, -1.4], [0.0, 0.0, 0.0, 1.0]])
-     #trans_init = np.eye(4)
-     #R_init = R3/R2_new
-     #T_init = T_middle_right
-     #tmp = eyes[]#np.hstack((R_init,T_init))
-     #trans_init = np.vstack((tmp,[0,0,0,1]))
-     beta = np.radians(0)
-     trans_init1 = np.array(
-                  [[np.cos(beta),   0,  np.sin(beta),   -47],
-                   [0,              1,  0,              0],
-                   [-np.sin(beta),  0,  np.cos(beta),   0],
-                   [0,              0,  0,              1]])
-     beta = np.radians(0)
-     trans_init2 = np.array(
-                  [[np.cos(beta),   0,  np.sin(beta),  0],
-                   [0,              1,  0,              0],
-                   [-np.sin(beta),  0,  np.cos(beta),   0],
-                   [0,              0,  0,              1]])
-     trans_init = trans_init1 @ trans_init2
-     reg_p2p = icp_combine.point_to_point_icp(pcd_right, pcd_left, threshold, trans_init)
-     print("Transformation Matrix:")
-     print(reg_p2p)
-     # 視覺化結果
-     icp_combine.draw_registration_result(pcd_right, pcd_left, reg_p2p)
+                #ICP combine
+                threshold = 0.05
+                beta = np.radians(0)
+                trans_init1 = np.array(
+                            [[np.cos(beta),   0,  np.sin(beta),   -47],
+                            [0,              1,  0,              0],
+                            [-np.sin(beta),  0,  np.cos(beta),   0],
+                            [0,              0,  0,              1]])
+                beta = np.radians(0)
+                trans_init2 = np.array(
+                            [[np.cos(beta),   0,  np.sin(beta),  0],
+                            [0,              1,  0,              0],
+                            [-np.sin(beta),  0,  np.cos(beta),   0],
+                            [0,              0,  0,              1]])
+                trans_init = trans_init1 @ trans_init2
+                reg_p2p = icp_combine.point_to_point_icp(pcd_middle_right, pcd_left_middle, threshold, trans_init)
+                print("Transformation Matrix:")
+                print(reg_p2p)
+                # 視覺化結果
+                pcd_middle_right.transform(reg_p2p)
+                newpointcloud = pcd_middle_right + pcd_left_middle 
+                o3d.visualization.draw_geometries([newpointcloud])
+                mesh_path = os.path.join(rectified_folder, 'mesh_icp.ply')
+                o3d.io.write_point_cloud(mesh_path, newpointcloud)
 
 
