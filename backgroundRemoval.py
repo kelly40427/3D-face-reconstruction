@@ -46,7 +46,7 @@ class background:
     #     edges = cv2.Canny(blurred, 400, 700)
 
     #     # Apply thresholding to further separate foreground and background
-    #     _, thresh = cv2.threshold(blurred, 110, 255, cv2.THRESH_BINARY)
+    #     _, thresh = cv2.threshold(blurred, 100, 255, cv2.THRESH_BINARY)
 
     #     # Combine edges and threshold to create a mask
     #     combined_mask = cv2.bitwise_or(edges, thresh)
