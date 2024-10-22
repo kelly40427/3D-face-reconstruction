@@ -93,6 +93,11 @@ for subject_path in subject_paths:
             img_middle = cv.imread(img_middle_path)
             img_right = cv.imread(img_right_path)
 
+            # make the image colour correct
+            img_left = cv.cvtColor(img_left, cv.COLOR_BGR2RGB)
+            img_middle = cv.cvtColor(img_middle, cv.COLOR_BGR2RGB)
+            img_right = cv.cvtColor(img_right, cv.COLOR_BGR2RGB)
+
             # Normalization
             images_for_normalization = [img_left, img_middle, img_right]
             normalized_images = colournorm.normalize_images(images_for_normalization)
