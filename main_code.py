@@ -42,8 +42,7 @@ subject_paths = [
     'ipcv_project3/subject2',
     'ipcv_project3/subject4'
 ]
-pcd_left_middle_list = []
-pcd_middle_right_list = []
+
 
 images_left = glob.glob(os.path.join(calib_left, '*.jpg'))
 images_middle = glob.glob(os.path.join(calib_middle, '*.jpg'))
@@ -92,6 +91,11 @@ for subject_path in subject_paths:
             img_left = cv.imread(img_left_path)
             img_middle = cv.imread(img_middle_path)
             img_right = cv.imread(img_right_path)
+
+            # make the image colour correct
+            img_left = cv.cvtColor(img_left, cv.COLOR_BGR2RGB)
+            img_middle = cv.cvtColor(img_middle, cv.COLOR_BGR2RGB)
+            img_right = cv.cvtColor(img_right, cv.COLOR_BGR2RGB)
 
             # Normalization
             images_for_normalization = [img_left, img_middle, img_right]
@@ -211,12 +215,10 @@ for subject_path in subject_paths:
                 # pcd_left_middle
                 pcd_left_middle = depth_map_creator.create_3dpoint_cloud2(depth_map_left_middle, rectified_middle, camera_matrix_middle, total_disparity_left_middle)
                 o3d.visualization.draw_geometries([pcd_left_middle], window_name="Colored Point Cloud with Normals")
-                pcd_left_middle_list.append(pcd_left_middle)
 
                 # pcd_middle_right
                 pcd_middle_right = depth_map_creator.create_3dpoint_cloud2(depth_map_middle_right, rectified_right, camera_matrix_middle, total_disparity_middle_right)
                 o3d.visualization.draw_geometries([pcd_middle_right], window_name="Colored Point Cloud with Normals")
-                pcd_middle_right_list.append(pcd_middle_right)
 
                 #ICP combine
                 threshold = 0.05
@@ -242,5 +244,10 @@ for subject_path in subject_paths:
                 o3d.visualization.draw_geometries([newpointcloud])
                 mesh_path = os.path.join(rectified_folder, 'mesh_icp.ply')
                 o3d.io.write_point_cloud(mesh_path, newpointcloud)
+
+                output_mesh_path = os.path.join(rectified_folder, "combined_mesh.ply")
+                mesh_generator.surface_reconstruction(newpointcloud, output_mesh_path)
+
+ 
 
 
