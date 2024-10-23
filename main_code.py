@@ -7,7 +7,7 @@ from PIL import Image
 import os
 import open3d as o3d
 import copy
-
+from tqdm import tqdm
 
 # Import the classes
 from colour_normalisation import ColourNorm
@@ -17,12 +17,13 @@ from stereoMatching import stereoMatching
 from DepthMapCreator import DepthMapCreator
 from MeshGenerator import MeshGenerator  
 from ICPCombine import ICPCombine
+from updated_bg_removal import ImprovedBackground
 
 # Define the classes
 colournorm = ColourNorm()
 stereocal = StereoCal()
-background_removal = background()
-stereo_matching = stereoMatching()
+background_removal = ImprovedBackground()
+stereo_matching = stereoMatching()  
 depth_map_creator = DepthMapCreator()
 mesh_generator = MeshGenerator()  
 icp_combine = ICPCombine()
@@ -102,10 +103,14 @@ for subject_path in subject_paths:
             normalized_images = colournorm.normalize_images(images_for_normalization)
             img_left, img_middle, img_right = normalized_images[0], normalized_images[1], normalized_images[2]
 
+            # Determine if the subject has special conditions
+            is_bald = 'subject4' in subject_path
+            is_left = 'Left' in img_left_path
+
             # Remove background
-            left_img_bg_removed = background_removal.remove_background(img_left)
-            middle_img_bg_removed = background_removal.remove_background(img_middle)
-            right_img_bg_removed = background_removal.remove_background(img_right)
+            left_img_bg_removed = background_removal.remove_background(img_left, img_left, is_bald=is_bald, is_left=is_left)
+            middle_img_bg_removed = background_removal.remove_background(img_middle, is_bald=is_bald)
+            right_img_bg_removed = background_removal.remove_background(img_right,is_bald=is_bald)
 
             # convert color to RGB
             left_img_bg_removed_RGB = cv.cvtColor(left_img_bg_removed, cv.COLOR_BGR2RGB)
@@ -124,9 +129,14 @@ for subject_path in subject_paths:
             cv.imwrite(middle_img_bg_removed_path, middle_img_bg_removed_RGB)
             cv.imwrite(right_img_bg_removed_path, right_img_bg_removed_RGB)
 
+            #convert color to BGR
+            left_img_bg_removed_BGR = cv.cvtColor(left_img_bg_removed_RGB, cv.COLOR_RGB2BGR)
+            middle_img_bg_removed_BGR = cv.cvtColor(middle_img_bg_removed_RGB, cv.COLOR_RGB2BGR)
+            right_img_bg_removed_BGR = cv.cvtColor(right_img_bg_removed_RGB, cv.COLOR_RGB2BGR)
+
             #Stereo rectification
-            rectified_left, rectified_middle = stereocal.rectify_images(left_img_bg_removed_RGB, middle_img_bg_removed_RGB, map1_x, map1_y, map2_x, map2_y)
-            rectified_middle_new, rectified_right = stereocal.rectify_images(middle_img_bg_removed_RGB, right_img_bg_removed_RGB, map2_x_new, map2_y_new, map3_x, map3_y)
+            rectified_left, rectified_middle = stereocal.rectify_images(left_img_bg_removed_BGR, middle_img_bg_removed_BGR, map1_x, map1_y, map2_x, map2_y)
+            rectified_middle_new, rectified_right = stereocal.rectify_images(middle_img_bg_removed_BGR, right_img_bg_removed_BGR, map2_x_new, map2_y_new, map3_x, map3_y)
 
             if rectified_left is not None and rectified_middle is not None and rectified_right is not None:
 
