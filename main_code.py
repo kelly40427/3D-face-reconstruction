@@ -1,3 +1,4 @@
+import cv2
 import cv2 as cv
 import numpy as np
 import glob
@@ -72,13 +73,10 @@ R2_new, R3, P2_new, P3, Q2, map2_x_new, map2_y_new, map3_x, map3_y, T_middle_rig
     objpoints, imgpoints_middle, imgpoints_right, camera_matrix_middle, dist_coeffs_middle,
     camera_matrix_right, dist_coeffs_right, image_size)
 
-
-base_path = 'D:/MyCode/Image Processing/project/ipcv_project3'
-
 cnt = 0
 
 for subject_path in subject_paths:
-        cnt = cnt + 1
+        cnt += 1
 
         print(f"Processing {subject_path}...")
 
@@ -103,36 +101,33 @@ for subject_path in subject_paths:
             normalized_images = colournorm.normalize_images(images_for_normalization)
             img_left, img_middle, img_right = normalized_images[0], normalized_images[1], normalized_images[2]
 
+            cv2.imwrite('ipcv_project3/subject1/subject1Left/subject1_Left_1_normalized.png', normalized_images[0])
+
             # Determine if the subject has special conditions
             is_bald = 'subject4' in subject_path
             is_left = 'Left' in img_left_path
 
             # Remove background
-            left_img_bg_removed = background_removal.remove_background(img_left, img_left, is_bald=is_bald, is_left=is_left)
+            left_img_bg_removed = background_removal.remove_background(img_left, is_bald=is_bald, is_left=is_left)
             middle_img_bg_removed = background_removal.remove_background(img_middle, is_bald=is_bald)
             right_img_bg_removed = background_removal.remove_background(img_right,is_bald=is_bald)
-
-            # convert color to RGB
-            left_img_bg_removed_RGB = cv.cvtColor(left_img_bg_removed, cv.COLOR_BGR2RGB)
-            middle_img_bg_removed_RGB = cv.cvtColor(middle_img_bg_removed, cv.COLOR_BGR2RGB)
-            right_img_bg_removed_RGB = cv.cvtColor(right_img_bg_removed, cv.COLOR_BGR2RGB)
 
             bg_removed_folder = os.path.join(subject_path, 'bg_removed')
             if not os.path.exists(bg_removed_folder):
                 os.makedirs(bg_removed_folder)
 
-            left_img_bg_removed_path = os.path.join(bg_removed_folder, 'left_bg_removed.jpg')
-            middle_img_bg_removed_path = os.path.join(bg_removed_folder, 'middle_bg_removed.jpg')
-            right_img_bg_removed_path = os.path.join(bg_removed_folder, 'right_bg_removed.jpg')
+            left_img_bg_removed_path = os.path.join(bg_removed_folder, 'left_bg_removed.png')
+            middle_img_bg_removed_path = os.path.join(bg_removed_folder, 'middle_bg_removed.png')
+            right_img_bg_removed_path = os.path.join(bg_removed_folder, 'right_bg_removed.png')
 
-            cv.imwrite(left_img_bg_removed_path, left_img_bg_removed_RGB)
-            cv.imwrite(middle_img_bg_removed_path, middle_img_bg_removed_RGB)
-            cv.imwrite(right_img_bg_removed_path, right_img_bg_removed_RGB)
+            cv.imwrite(left_img_bg_removed_path, left_img_bg_removed)
+            cv.imwrite(middle_img_bg_removed_path, middle_img_bg_removed)
+            cv.imwrite(right_img_bg_removed_path, right_img_bg_removed)
 
             #convert color to BGR
-            left_img_bg_removed_BGR = cv.cvtColor(left_img_bg_removed_RGB, cv.COLOR_RGB2BGR)
-            middle_img_bg_removed_BGR = cv.cvtColor(middle_img_bg_removed_RGB, cv.COLOR_RGB2BGR)
-            right_img_bg_removed_BGR = cv.cvtColor(right_img_bg_removed_RGB, cv.COLOR_RGB2BGR)
+            left_img_bg_removed_BGR = cv.cvtColor(left_img_bg_removed, cv.COLOR_BGRA2BGR)
+            middle_img_bg_removed_BGR = cv.cvtColor(middle_img_bg_removed, cv.COLOR_BGRA2BGR)
+            right_img_bg_removed_BGR = cv.cvtColor(right_img_bg_removed, cv.COLOR_BGRA2BGR)
 
             #Stereo rectification
             rectified_left, rectified_middle = stereocal.rectify_images(left_img_bg_removed_BGR, middle_img_bg_removed_BGR, map1_x, map1_y, map2_x, map2_y)
@@ -257,7 +252,3 @@ for subject_path in subject_paths:
 
                 output_mesh_path = os.path.join(rectified_folder, "combined_mesh.ply")
                 mesh_generator.surface_reconstruction(newpointcloud, output_mesh_path)
-
- 
-
-
