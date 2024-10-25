@@ -232,11 +232,15 @@ for subject_path in subject_paths:
             pcd_left_middle = depth_map_creator.create_3dpoint_cloud2(depth_map_left_middle, rectified_middle,
                                                                       camera_matrix_middle, total_disparity_left_middle)
             o3d.visualization.draw_geometries([pcd_left_middle], window_name="Colored Point Cloud with Normals: pcd_left_middle")
+            output_mesh_path = os.path.join(rectified_folder, f'left_middle_mesh_{base_number}.ply')
+            mesh_generator.surface_reconstruction(pcd_left_middle, output_mesh_path)
 
             # pcd_middle_right
             pcd_middle_right = depth_map_creator.create_3dpoint_cloud2(depth_map_middle_right, rectified_right,
                                                                        camera_matrix_middle, total_disparity_middle_right)
             o3d.visualization.draw_geometries([pcd_middle_right], window_name="Colored Point Cloud with Normals: pcd_middle_right")
+            output_mesh_path = os.path.join(rectified_folder, f'middle_right_mesh_{base_number}.ply')
+            mesh_generator.surface_reconstruction(pcd_middle_right, output_mesh_path)
 
             # ICP combine
             threshold = 0.05
