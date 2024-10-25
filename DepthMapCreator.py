@@ -31,6 +31,15 @@ class DepthMapCreator:
         # depth_map_normalized = cv2.normalize(depth_map, None, 0, 255, norm_type=cv2.NORM_MINMAX)
         # depth_map_normalized = np.uint8(depth_map_normalized)
         
+        # Define a kernel for morphological operations
+        kernel = np.ones((25, 25), np.uint8)
+
+        # Apply morphological closing
+        depth_map = cv2.morphologyEx(depth_map, cv2.MORPH_CLOSE, kernel)
+        
+        # Apply bilateral filter to smooth disparity map
+        depth_map = cv2.bilateralFilter(depth_map, 9, 5, 5)
+
         return depth_map
 
 
@@ -105,13 +114,17 @@ class DepthMapCreator:
                 
                 # 获取对应像素的颜色
                 if u-total_disparity<0:
-                    ucolor = 0
+                    continue
+                    color = [0,0,0]
                 else:
                     ucolor = u-total_disparity
-                color = image[v, ucolor]
+                    color = image[v, ucolor]
+                    if color[3]==0:
+                        continue
+                        color = [0,0,0]
                 
                 # 将三维点和颜色组合起来
-                point_cloud.append([X, Y, Z, color[0], color[1], color[2]])
+                point_cloud.append([X, Y, Z, color[2], color[1], color[1]])
 
         point_cloud = np.array(point_cloud)
         points = point_cloud[:, :3]

@@ -67,7 +67,7 @@ class stereoMatching:
         disparity[disparity < 0] = 0
 
         # Define a kernel for morphological operations
-        kernel = np.ones((20, 20), np.uint8)
+        kernel = np.ones((25, 25), np.uint8)
 
         # Apply morphological closing
         disparity = cv2.morphologyEx(disparity, cv2.MORPH_CLOSE, kernel)

@@ -132,6 +132,10 @@ for subject_path in subject_paths:
 
         print(f"Saved background removed images for set {base_number}")
 
+        #left_img_bg_removed_BGR = cv2.cvtColor(left_img_bg_removed, cv2.COLOR_RGB2BGR)
+        #middle_img_bg_removed_BGR = cv2.cvtColor(middle_img_bg_removed, cv2.COLOR_RGB2BGR)
+        #right_img_bg_removed_BGR = cv2.cvtColor(right_img_bg_removed, cv2.COLOR_RGB2BGR)
+        
 
        # Stereo rectification
         rectified_left, rectified_middle = stereocal.rectify_images(
