@@ -171,8 +171,26 @@ class StereoCal:
         return R1, R2, P1, P2, Q, map1_x, map1_y, map2_x, map2_y, T
 
     def rectify_images(self, image1, image2, map1_x, map1_y, map2_x, map2_y):
+        """
+        Rectify images while preserving alpha channel if present
+        """
 
-        rectified_image1 = cv2.remap(image1, map1_x, map1_y, cv2.INTER_LINEAR)
-        rectified_image2 = cv2.remap(image2, map2_x, map2_y, cv2.INTER_LINEAR)
+        if len(image1.shape) == 3 and image1.shape[2] == 4:  # BGRA format
+            # Respectively Remap The BGR and A channels
+            rectified_bgr1 = cv2.remap(image1[:,:,:3], map1_x, map1_y, cv2.INTER_LINEAR)
+            rectified_alpha1 = cv2.remap(image1[:,:,3], map1_x, map1_y, cv2.INTER_LINEAR)
+            rectified_image1 = cv2.merge([rectified_bgr1, rectified_alpha1[:,:,np.newaxis]])
+        else:
+            print("NOT IN BGRA FORMAT")
+            rectified_image1 = cv2.remap(image1, map1_x, map1_y, cv2.INTER_LINEAR)
+
+        if len(image2.shape) == 3 and image2.shape[2] == 4:  # BGRA format
+            rectified_bgr2 = cv2.remap(image2[:,:,:3], map2_x, map2_y, cv2.INTER_LINEAR)
+            rectified_alpha2 = cv2.remap(image2[:,:,3], map2_x, map2_y, cv2.INTER_LINEAR)
+            rectified_image2 = cv2.merge([rectified_bgr2, rectified_alpha2[:,:,np.newaxis]])
+        else:
+            print("NOT IN BGRA FORMAT")
+            rectified_image2 = cv2.remap(image2, map2_x, map2_y, cv2.INTER_LINEAR)
+
         return rectified_image1, rectified_image2
 
