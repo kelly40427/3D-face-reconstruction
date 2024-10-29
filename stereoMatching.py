@@ -73,7 +73,10 @@ class stereoMatching:
         disparity = cv2.morphologyEx(disparity, cv2.MORPH_CLOSE, kernel)
         
         # Apply bilateral filter to smooth disparity map
-        disparity = cv2.bilateralFilter(disparity, 9, 5, 5)
+        # disparity = cv2.bilateralFilter(disparity, 9, 5, 5)
+
+        # Adaptive Weighting with Guided Filtering
+        disparity = self.guided_filtering(disparity, img1_gray)
         
         # Normalize for better visualization
         # disparity = cv2.normalize(disparity, disparity, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
@@ -97,5 +100,16 @@ class stereoMatching:
         filtered_disparity[unreliable_mask == 255] = 0  
 
         return filtered_disparity
+        
+    def guided_filtering(self, disparity, guide_image, radius=15, eps=1e-6):
+        """Applies guided filtering to smooth the disparity map based on the guide image."""
+        # Use OpenCV's guided filter if available
+        if hasattr(ximgproc, 'guidedFilter'):
+            guided_disparity = ximgproc.guidedFilter(guide_image, disparity, radius, eps)
+        else:
+            # If ximgproc is unavailable, fall back to bilateral filter as a rough approximation
+            guided_disparity = cv2.bilateralFilter(disparity, d=9, sigmaColor=5, sigmaSpace=5)
 
+        return guided_disparity
+    
     
