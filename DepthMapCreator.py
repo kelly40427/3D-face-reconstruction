@@ -124,7 +124,8 @@ class DepthMapCreator:
                         color = [0,0,0]
                 
                 # 将三维点和颜色组合起来
-                point_cloud.append([X, Y, Z, color[2], color[1], color[1]])
+                # point_cloud.append([X, Y, Z, color[2], color[1], color[1]])
+                point_cloud.append([X, Y, Z, color[2], color[1], color[0]])
 
         point_cloud = np.array(point_cloud)
         points = point_cloud[:, :3]
