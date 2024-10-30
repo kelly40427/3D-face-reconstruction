@@ -33,17 +33,12 @@ calib_left = 'ipcv_project3/Calibratie 1/calibrationLeft'
 calib_middle = 'ipcv_project3/Calibratie 1/calibrationMiddle'
 calib_right = 'ipcv_project3/Calibratie 1/calibrationRight'
 
-# CM1, dist1, CM2, dist2, R_left_middle, T_left_middle = stereocal.stereo_calibration(calib_left, calib_middle)
-# CM_middle, dist_middle, CM_right, dist_right, R_middle_right, T_middle_right = stereocal.stereo_calibration(calib_middle, calib_right)
-
-
 # Paths to subjects
 subject_paths = [
     'ipcv_project3/subject1',
     'ipcv_project3/subject2',
     'ipcv_project3/subject4'
 ]
-
 
 images_left = glob.glob(os.path.join(calib_left, '*.jpg'))
 images_middle = glob.glob(os.path.join(calib_middle, '*.jpg'))
@@ -195,8 +190,6 @@ for subject_path in subject_paths:
             filtered_disparity_map_middle_right = stereo_matching.filter_disparity(disparity_map_middle_right,
                                                                                    unreliable_disparity_map_middle_right)
 
-            # disparity_map_left_middle_clipped = np.clip(disparity_map_left_middle, 0, 255)
-            # disparity_map_middle_right_clipped = np.clip(disparity_map_middle_right, 0, 255)
 
             plt.figure(figsize=(12, 6))
             plt.subplot(1, 2, 1)
@@ -261,7 +254,6 @@ for subject_path in subject_paths:
             print("Transformation Matrix:")
             print(reg_p2p)
 
-            # 視覺化結果
             # visualize
             pcd_middle_right.transform(reg_p2p)
             newpointcloud = pcd_middle_right + pcd_left_middle
