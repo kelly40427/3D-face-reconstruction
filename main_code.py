@@ -255,13 +255,13 @@ for subject_path in subject_paths:
             print(reg_p2p)
 
             # visualize
-            pcd_middle_right.transform(reg_p2p)
-            newpointcloud = pcd_middle_right + pcd_left_middle
-            o3d.visualization.draw_geometries([newpointcloud], window_name="new point cloud")
-            mesh_path = os.path.join(rectified_folder, f'mesh_icp_{base_number}.ply')
-            o3d.io.write_point_cloud(mesh_path, newpointcloud)
+            pcd_middle_right.transform(reg_p2p) # apply transformation
+            newpointcloud = pcd_middle_right + pcd_left_middle # combine point clouds
+            o3d.visualization.draw_geometries([newpointcloud], window_name="new point cloud") # visualize
+            mesh_path = os.path.join(rectified_folder, f'mesh_icp_{base_number}.ply') # save point cloud
+            o3d.io.write_point_cloud(mesh_path, newpointcloud) # save point cloud
 
-            output_mesh_path = os.path.join(rectified_folder, f'combined_mesh_{base_number}.ply')
-            mesh_generator.surface_reconstruction(newpointcloud, output_mesh_path)
-
+            output_mesh_path = os.path.join(rectified_folder, f'combined_mesh_{base_number}.ply') # save mesh
+            mesh_generator.surface_reconstruction(newpointcloud, output_mesh_path) # uses Poisson surface reconstruction to make continues mesh
+            
             print(f"Completed processing image set {base_number}")
