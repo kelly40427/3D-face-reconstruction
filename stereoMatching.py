@@ -13,8 +13,6 @@ class stereoMatching:
         img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
         # Parameters for StereoSGBM
-        #minDisparity = 276
-        #numDisparities = 16*4  # Must be a multiple of 16
         blockSize = 5  # Block size for matching
 
         # Initialize StereoSGBM object with corrected P1 and P2
@@ -42,15 +40,10 @@ class stereoMatching:
         # Apply morphological closing
         disparity = cv2.morphologyEx(disparity, cv2.MORPH_CLOSE, kernel)
         
-        # Apply bilateral filter to smooth disparity map
-        # disparity = cv2.bilateralFilter(disparity, 9, 5, 5)
 
         # Adaptive Weighting with Guided Filtering
         disparity = self.guided_filtering(disparity, img1_gray)
-        
-        # Normalize for better visualization
-        # disparity = cv2.normalize(disparity, disparity, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
-        # disparity = np.uint8(disparity)
+
         print(f"Disparity Map Min: {np.min(disparity)}, Max: {np.max(disparity)}")
         
         return minDisparity+numDisparities, disparity
