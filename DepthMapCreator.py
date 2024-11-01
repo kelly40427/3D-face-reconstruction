@@ -58,12 +58,12 @@ class DepthMapCreator:
 
         points_3d = cv2.reprojectImageTo3D(disparity_map, Q)
 
-        # 建立有效視差範圍的遮罩
+        # establish mask for valid depth range
         min_disparity = 0
         max_disparity = min_disparity+1024
         valid_mask = (disparity_map > min_disparity) & (disparity_map < max_disparity)
 
-        # 同時使用遮罩篩選 points_3D
+        # filter points_3D with valid_mask
         points_3d = points_3d[valid_mask]
           
         return points_3d, valid_mask
@@ -85,34 +85,35 @@ class DepthMapCreator:
 
     def create_3dpoint_cloud2(self, depth_map, image, K, total_disparity):
         """
-        通过深度图和RGB图像生成带颜色的点云
-        depth_map: 深度图 (H x W)
-        image: 对齐的RGB图像 (H x W x 3)
-        K: 相机内参矩阵
+        Generate colored point-cloud from depth map and image
+        depth_map: (H x W)
+        image: rectified RGBA image (H x W x 4)
+        K: intrinsic matrix
+        total_disparity: Offset along the X axis of image
         """
         h, w = depth_map.shape
 
-        # 相机内参
+        # intrinsic parameters to get focal length and principal point
         fx, fy = K[0, 0], K[1, 1]
         cx, cy = K[0, 2], K[1, 2]
 
-        # 创建空的点云列表
+        # empty point cloud
         point_cloud = []
 
-        # 遍历每个像素
+        # Traversal oer the pixels
         for v in range(h):
             for u in range(w):
                 Z = depth_map[v, u]
                 
-                # 跳过无效深度
+                # skip invalid depth(negative)
                 if Z <= 0:
                     continue
                 
-                # 计算三维坐标
+                # Calculate 3D coordinate
                 X = (u - cx) * Z / fx
                 Y = (v - cy) * Z / fy
                 
-                # 获取对应像素的颜色
+                # getting correspond color
                 if u-total_disparity<0:
                     continue
                     color = [0,0,0]
@@ -123,13 +124,12 @@ class DepthMapCreator:
                         continue
                         color = [0,0,0]
                 
-                # 将三维点和颜色组合起来
-                # point_cloud.append([X, Y, Z, color[2], color[1], color[1]])
+                # combine points with color
                 point_cloud.append([X, Y, Z, color[2], color[1], color[0]])
 
         point_cloud = np.array(point_cloud)
         points = point_cloud[:, :3]
-        colors = point_cloud[:, 3:] / 255.0  # 将颜色归一化到 [0, 1]
+        colors = point_cloud[:, 3:] / 255.0  # normalize color to [0, 1]
 
         # Create Open3D point cloud object
         pcd = o3d.geometry.PointCloud()
