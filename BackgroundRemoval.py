@@ -25,7 +25,7 @@ class ImprovedBackground:
         log_file = os.path.join(output_folder, 'processing_log.txt')
 
         # show progress using tqdm
-        with tqdm(total=len(file_list), desc="处理图像") as pbar:
+        with tqdm(total=len(file_list), desc="processing image") as pbar:
             for file_path_in in file_list:
                 try:
                     img = cv2.imread(file_path_in)

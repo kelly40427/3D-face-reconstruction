@@ -17,7 +17,7 @@ from stereoMatching import stereoMatching
 from DepthMapCreator import DepthMapCreator
 from MeshGenerator import MeshGenerator  
 from ICPCombine import ICPCombine
-from updated_bg_removal import ImprovedBackground
+from BackgroundRemoval import ImprovedBackground
 
 # Define the classes
 colournorm = ColourNorm()
