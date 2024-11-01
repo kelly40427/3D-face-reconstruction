@@ -6,37 +6,6 @@ class stereoMatching:
 
     def __init__(self, disparity_threshold=1.0):
         self.disparity_threshold = disparity_threshold
-
-    # def stereoMatching(self, img1, img2, h, w):
-    #     DMap = np.zeros(img1.shape[:2])
-    #     imgH, imgW = img1.shape[:2]
-    #     img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-    #     img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-        
-    #     for scanH in range(0, imgH, h):
-    #         for scanW in range(0, imgW, w):
-    #             template = img2[scanH:scanH+h, scanW:scanW+w]
-    #             croppedImg2 = img1[scanH:scanH+h, 0:imgW]
-
-    #             # match
-    #             result = cv2.matchTemplate(croppedImg2, template, cv2.TM_CCOEFF_NORMED)
-
-    #             # find the best match
-    #             min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
-
-    #             for i in range(scanH, min(scanH+h, imgH)):
-    #                 for j in range(scanW, min(scanW+w, imgW)):
-    #                     DMap[i, j] = max_loc[0] - scanW
-
-    #     # Define a kernel for morphological operations
-    #     kernel = np.ones((20, 20), np.uint8)
-
-    #     # Apply morphological closing
-    #     DMap = cv2.morphologyEx(DMap, cv2.MORPH_CLOSE, kernel)
-
-    #     DMap[DMap>200] = 200
-    #     return DMap
-    
     
     def stereoMatchingBM(self, img1, img2, minDisparity, numDisparities, blockSize, uniquenessRatio):
         # Convert images to grayscale
