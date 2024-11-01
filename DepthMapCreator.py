@@ -12,12 +12,6 @@ class DepthMapCreator:
         min_disparity = 10
         max_disparity = min_disparity+1024
         valid_mask = (disparity_map > min_disparity) & (disparity_map < max_disparity)
-        # Reproject points to 3D space (Z axis corresponds to depth)
-        #points_3D = cv2.reprojectImageTo3D(disparity_map, Q)
-        
-        # Extract the Z coordinate (depth) from the 3D points
-        #depth_map = points_3D[:, :, 2]
-        #depth_map = np.where(valid_mask, depth_map, 0)
         
         #Z = fB/d
         depth_map = (focal_length * baseline) / disparity_map
@@ -27,9 +21,6 @@ class DepthMapCreator:
         depth_map[depth_map < 0 ] = 0
         depth_map[depth_map > 10000] = 10000  # Set a reasonable threshold for large depth values
         
-        # Normalize depth map for better visualization
-        # depth_map_normalized = cv2.normalize(depth_map, None, 0, 255, norm_type=cv2.NORM_MINMAX)
-        # depth_map_normalized = np.uint8(depth_map_normalized)
         
         # Define a kernel for morphological operations
         kernel = np.ones((25, 25), np.uint8)
@@ -54,34 +45,6 @@ class DepthMapCreator:
         plt.savefig(output_path)
         plt.show()
 
-    def create_3d_points(self, disparity_map, Q):
-
-        points_3d = cv2.reprojectImageTo3D(disparity_map, Q)
-
-        # establish mask for valid depth range
-        min_disparity = 0
-        max_disparity = min_disparity+1024
-        valid_mask = (disparity_map > min_disparity) & (disparity_map < max_disparity)
-
-        # filter points_3D with valid_mask
-        points_3d = points_3d[valid_mask]
-          
-        return points_3d, valid_mask
-    
-    def create_3dpoint_cloud(self, points_3d, colors):
-        """
-        Create an Open3D point cloud object from 3D points and colors.
-        """
-
-        # Create Open3D point cloud object
-        pcd = o3d.geometry.PointCloud()
-        pcd.points = o3d.utility.Vector3dVector(points_3d.reshape(-1, 3))  # Reshape points into Nx3
-        # Normalize the color values (if not already) and assign to point cloud
-        pcd.colors = o3d.utility.Vector3dVector(colors/ 255.0)  # Reshape and normalize colors
-        pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
-        print("Number of points in point cloud:", np.asarray(pcd.points).shape[0])
-    
-        return pcd
 
     def create_3dpoint_cloud2(self, depth_map, image, K, total_disparity):
         """
